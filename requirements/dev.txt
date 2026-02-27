@@ -1,0 +1,11 @@
+-r base.txt
+
+# ── Dev tools ────────────────────
+django-debug-toolbar>=4.4,<5.0
+ipython>=8.0
+black>=24.0
+ruff>=0.5
+pytest>=8.0
+pytest-django>=4.8
+factory-boy>=3.3
+flower>=2.0

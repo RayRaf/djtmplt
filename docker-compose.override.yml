@@ -1,0 +1,78 @@
+# =============================================================
+#  docker-compose.override.yml — LOCAL DEVELOPMENT
+#
+#  Automatically merged with docker-compose.yml by Docker Compose.
+#
+#  Differences from production:
+#  - ports: mapped to host (8000, 5432, 6379)
+#  - Volume mounts for live code reload
+#  - .env file loaded
+#  - Django dev server with runserver
+#  - DEBUG=1
+#  - Flower UI for Celery monitoring
+# =============================================================
+
+services:
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Override CMD to use Django dev server with auto-reload
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+      - DEBUG=1
+    volumes:
+      - ./app:/app
+    env_file:
+      - .env
+
+  celery-worker:
+    command: celery -A config worker -l debug --concurrency=1
+    volumes:
+      - ./app:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+
+  celery-beat:
+    command: celery -A config beat -l debug --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./app:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+
+  db:
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A config flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.dev
+    volumes:
+      - ./app:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - app-network
