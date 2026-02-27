@@ -27,6 +27,14 @@ services:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-}
       - RUN_MIGRATIONS=1
       - GUNICORN_WORKERS=${GUNICORN_WORKERS:-3}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL:-INFO}
+      - TZ=${TZ:-UTC}
     depends_on:
       db:
         condition: service_healthy
@@ -55,6 +63,11 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - CELERY_CONCURRENCY=${CELERY_CONCURRENCY:-2}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL:-INFO}
+      - TZ=${TZ:-UTC}
     depends_on:
       db:
         condition: service_healthy
@@ -76,6 +89,11 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/1
       - SECRET_KEY=${SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL:-INFO}
+      - TZ=${TZ:-UTC}
     depends_on:
       db:
         condition: service_healthy
