@@ -36,7 +36,8 @@ RUN chmod +x /entrypoint.sh
 
 COPY app/ /app/
 
-RUN python manage.py collectstatic --noinput 2>/dev/null || true
+ENV DJANGO_SETTINGS_MODULE=config.settings.prod
+RUN SECRET_KEY=build-dummy-key ALLOWED_HOSTS=build python manage.py collectstatic --noinput
 
 RUN chown -R app:app /app
 USER app
@@ -44,4 +45,4 @@ USER app
 EXPOSE 8000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
+CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN_WORKERS:-3} --timeout 120 --max-requests 1000 --max-requests-jitter 50"]

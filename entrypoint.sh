@@ -27,9 +27,17 @@ print("❌ Could not connect to database")
 sys.exit(1)
 EOF
 
-# Run migrations
-echo "📦 Running migrations..."
-python manage.py migrate --noinput
+# Run migrations and superuser creation only on the web service.
+# Set RUN_MIGRATIONS=1 in the web service environment to enable.
+if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
+    echo "📦 Running migrations..."
+    python manage.py migrate --noinput
+
+    echo "👤 Creating superuser if none exists..."
+    python manage.py create_superuser_if_none
+else
+    echo "⏭️  Skipping migrations (RUN_MIGRATIONS != 1)"
+fi
 
 # Execute the main command (CMD from Dockerfile or docker-compose)
 echo "🚀 Starting: $@"

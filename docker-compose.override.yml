@@ -25,6 +25,7 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - DEBUG=1
+      - RUN_MIGRATIONS=1
     volumes:
       - ./app:/app
     env_file:
