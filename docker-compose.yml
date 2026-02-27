@@ -97,10 +97,11 @@ services:
       - "5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     networks:
       - app-network
 
@@ -116,6 +117,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
     networks:
       - app-network
 
