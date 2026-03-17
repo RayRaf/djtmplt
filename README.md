@@ -1,6 +1,6 @@
 # Django Infrastructure Template
 
-Production-ready Django + Celery + Redis + Postgres template.  
+Production-focused Django + Celery + Redis + Postgres baseline.  
 Local dev via `docker-compose.override.yml`, production via `docker-compose.yml` in Dokploy.
 
 ## Architecture
@@ -136,13 +136,76 @@ Push to your repo branch — Dokploy auto-deploys.
 - `dev.py` — DEBUG, CORS allow-all, console email
 - `prod.py` — SSL redirect, HSTS, secure cookies
 
-### Health check endpoint
+### Health and readiness endpoints
 
-`/health/` returns `{"status": "ok"}` — used by Docker healthcheck and Dokploy.
+- `/health/` is a lightweight liveness probe for the Django process.
+- `/ready/` verifies database connectivity, Redis cache access, and unapplied migrations before reporting ready.
+
+Production `web` healthchecks now target `/ready/` so the container only becomes healthy after runtime dependencies are available.
 
 ### Entrypoint
 
 Waits for Postgres, runs migrations, then starts the main process. Same entrypoint for web, worker, and beat — they just override the `CMD`.
+
+## Current Production Baseline
+
+This template is suitable as a production baseline, but it is not a complete platform out of the box.
+
+Included today:
+
+- split `dev` / `prod` settings
+- Gunicorn + non-root container runtime
+- Postgres, Redis, Celery worker, Celery beat
+- WhiteNoise static file serving
+- liveness and readiness probes
+- optional Sentry integration
+
+Still expected from the deploying team:
+
+- backup/restore scheduling and retention policy for Postgres and Redis
+- secrets rotation policy
+- monitoring/alerting beyond basic logs and optional Sentry
+- final decision for user-uploaded media storage
+- CI pipeline with linting, tests, and `manage.py check --deploy`
+
+## Database Backup / Restore
+
+The template now includes management commands for PostgreSQL backups to S3-compatible storage.
+
+Required environment variables:
+
+- `AWS_STORAGE_BUCKET_NAME` or `S3_BUCKET_NAME`
+- `DB_BACKUP_S3_PREFIX` — project directory inside the bucket
+- standard S3 credentials such as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+- optional custom endpoint: `AWS_S3_ENDPOINT_URL`
+
+Backups are uploaded under:
+
+- `s3://<bucket>/<DB_BACKUP_S3_PREFIX>/database-backups/<filename>.dump`
+
+Examples:
+
+```bash
+# Create backup and upload to S3
+docker compose exec web python manage.py backup_db
+
+# Create backup with explicit name
+docker compose exec web python manage.py backup_db --filename pre_release.dump
+
+# Restore the latest backup for the current project prefix
+docker compose exec web python manage.py restore_db --latest --yes
+
+# Restore a specific object key
+docker compose exec web python manage.py restore_db \
+    --key djtmplt/database-backups/pre_release.dump \
+    --yes
+```
+
+Notes:
+
+- Commands use `pg_dump` and `pg_restore` inside the container.
+- Restore is destructive and requires `--yes`.
+- The command never writes objects to the S3 bucket root; it always uses the configured project prefix.
 
 ## Common Operations
 
@@ -155,6 +218,9 @@ docker compose exec web python manage.py shell
 
 # Run tests
 docker compose exec web pytest
+
+# Run Django deployment checks
+docker compose exec web python manage.py check --deploy
 
 # View Celery worker logs
 docker compose logs -f celery-worker

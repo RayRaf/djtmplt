@@ -20,11 +20,17 @@ if not _allowed_hosts_raw.strip() or _allowed_hosts_raw.strip() == "*":
 SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "1") == "1"  # noqa: F405
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "Lax"
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
 
 # ── CORS must be explicit in production ──────────────────────
 CORS_ALLOW_ALL_ORIGINS = False
